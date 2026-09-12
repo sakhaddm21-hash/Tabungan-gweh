@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabungan Online</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+  body {
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh; display:flex; justify-content:center; align-items:center;
+    padding:20px;
+  }
+  .card {
+    width:400px; max-width:100%; background:#fff; border-radius:20px;
+    padding:30px 25px; box-shadow:0 20px 50px rgba(0,0,0,.25);
+  }
+  h1 { text-align:center; font-size:20px; color:#333; margin-bottom:6px; }
+  .subtitle { text-align:center; font-size:12px; color:#999; margin-bottom:24px; }
+
+  .saldo-box {
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:#fff; border-radius:16px; padding:22px; text-align:center;
+    margin-bottom:20px;
+  }
+  .saldo-box p { font-size:13px; opacity:.9; margin-bottom:6px; }
+  .saldo-box h2 { font-size:32px; font-weight:700; }
+
+  label { font-size:13px; color:#555; font-weight:500; display:block; margin-bottom:6px; }
+  input {
+    width:100%; padding:12px 14px; border:2px solid #eee; border-radius:10px;
+    font-size:15px; outline:none; transition:.2s; margin-bottom:14px;
+  }
+  input:focus { border-color:#667eea; }
+
+  .btn-row { display:flex; gap:10px; margin-bottom:20px; }
+  button {
+    flex:1; padding:13px; border:none; border-radius:10px;
+    font-size:14px; font-weight:600; cursor:pointer; transition:.2s;
+  }
+  .btn-add { background:#4caf50; color:#fff; }
+  .btn-add:hover { background:#43a047; }
+  .btn-out { background:#ff5252; color:#fff; }
+  .btn-out:hover { background:#e53935; }
+  .btn-primary { background:#667eea; color:#fff; width:100%; margin-bottom:10px; }
+  .btn-primary:hover { background:#5a6fd8; }
+
+  .riwayat-title {
+    font-size:14px; font-weight:600; color:#333;
+    margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .reset {
+    font-size:11px; color:#ff5252; cursor:pointer; background:none;
+    border:none; padding:0; font-weight:500;
+  }
+  .riwayat { max-height:200px; overflow-y:auto; }
+  .item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 12px; background:#f9f9f9; border-radius:10px;
+    margin-bottom:6px; font-size:13px;
+    animation: slide .3s ease;
+  }
+  @keyframes slide {
+    from { opacity:0; transform:translateX(-10px); }
+    to { opacity:1; transform:none; }
+  }
+  .item .kiri small { display:block; font-size:11px; color:#999; margin-top:2px; }
+  .masuk { color:#4caf50; font-weight:600; }
+  .keluar { color:#ff5252; font-weight:600; }
+  .kosong { text-align:center; color:#bbb; font-size:13px; padding:15px; }
+
+  .user-bar {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:#666; margin-bottom:14px;
+    padding:8px 12px; background:#f5f5f5; border-radius:8px;
+  }
+  .user-bar span { font-weight:600; color:#333; word-break:break-all; }
+  .user-bar button {
+    flex:none; padding:5px 10px; font-size:11px;
+    background:#ff5252; color:#fff; border-radius:6px;
+  }
+  .hidden { display:none !important; }
+
+  .status {
+    text-align:center; font-size:11px; color:#999;
+    margin-top:10px; min-height:16px;
+  }
+  .status.online { color:#4caf50; }
+  .status.offline { color:#ff9800; }
+  .status.error { color:#ff5252; }
+
+  .link-btn {
+    background:none; border:none; color:#667eea;
+    font-size:12px; text-decoration:underline; cursor:pointer;
+    margin-top:6px; padding:4px; width:100%;
+  }
+  .link-btn:hover { color:#5a6fd8; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ===== LOGIN ===== -->
+  <div id="loginBox">
+    <h1>🔐 Login Tabungan</h1>
+    <p class="subtitle">Data tersinkron di semua device</p>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="email@contoh.com">
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="min. 6 karakter">
+
+    <button class="btn-primary" onclick="login()">Masuk</button>
+    <button class="btn-primary" style="background:#4caf50" onclick="register()">Daftar Baru</button>
+    <button class="link-btn" onclick="lupaPassword()">Lupa Password?</button>
+
+    <div class="status" id="loginStatus"></div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div id="appBox" class="hidden">
+    <div class="user-bar">
+      <div>👤 <span id="userEmail">-</span></div>
+      <button onclick="logout()">Keluar</button>
+    </div>
+
+    <div class="saldo-box">
+      <p>Total Tabungan</p>
+      <h2 id="saldo">Rp 0</h2>
+    </div>
+
+    <label>Nominal (Rp)</label>
+    <input type="number" id="input" placeholder="Contoh: 50000">
+
+    <div class="btn-row">
+      <button class="btn-add" onclick="tambah()">+ Nabung</button>
+      <button class="btn-out" onclick="kurang()">- Ambil</button>
+    </div>
+
+    <div class="riwayat-title">
+      <span>Riwayat</span>
+      <button class="reset" onclick="reset()">Hapus Semua</button>
+    </div>
+    <div class="riwayat" id="riwayat">
+      <div class="kosong">Memuat data...</div>
+    </div>
+    <div class="status" id="syncStatus">🔄 Menghubungkan...</div>
+  </div>
+
+</div>
+
+<!-- ===== FIREBASE SDK ===== -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  signOut, onAuthStateChanged, sendPasswordResetEmail
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, doc, setDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* 🔥 CONFIG — udah gue copy dari punya kamu */
+const firebaseConfig = {
+  apiKey: "AIzaSyAHf7dLtrU8Xikw6tgSnOXfhI_d5iluU8",
+  authDomain: "tabungan-sakha.firebaseapp.com",
+  projectId: "tabungan-sakha",
+  storageBucket: "tabungan-sakha.firebasestorage.app",
+  messagingSenderId: "457204884536",
+  appId: "1:457204884536:web:01b29c3c972ba3a893f2cd"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let data = { saldo: 0, riwayat: [] };
+let unsubscribe = null;
+
+const rp = n => 'Rp ' + Number(n).toLocaleString('id-ID');
+const $ = id => document.getElementById(id);
+
+/* ===== AUTH ===== */
+window.login = async function() {
+  const email = $('email').value.trim();
+  const pass = $('password').value;
+  if (!email || !pass) return setStatus('Isi email & password', 'error');
+
+  try {
+    setStatus('⏳ Login...', '');
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    setStatus('❌ ' + pesanError(e.code), 'error');
+  }
+};
+
+window.register = async function() {
+  const email = $('email').value.trim();
+  const pass = $('password').value;
+  if (!email || !pass) return setStatus('Isi email & password', 'error');
+  if (pass.length < 6) return setStatus('Password min. 6 karakter', 'error');
+
+  try {
+    setStatus('⏳ Mendaftar...', '');
+    await createUserWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    setStatus('❌ ' + pesanError(e.code), 'error');
+  }
+};
+
+window.lupaPassword = async function() {
+  const email = $('email').value.trim();
+  if (!email) return setStatus('Isi email dulu di kolom Email', 'error');
+
+  if (!confirm('Kirim link reset password ke ' + email + '?')) return;
+
+  try {
+    setStatus('⏳ Mengirim email...', '');
+    await sendPasswordResetEmail(auth, email);
+    setStatus('✅ Link reset terkirim! Cek inbox/spam email kamu.', 'online');
+  } catch (e) {
+    setStatus('❌ ' + pesanError(e.code), 'error');
+  }
+};
+
+window.logout = async function() {
+  if (unsubscribe) unsubscribe();
+  await signOut(auth);
+};
+
+function pesanError(code) {
+  const map = {
+    'auth/invalid-email': 'Email tidak valid',
+    'auth/user-not-found': 'Akun tidak ditemukan',
+    'auth/wrong-password': 'Password salah',
+    'auth/invalid-credential': 'Email/password salah',
+    'auth/email-already-in-use': 'Email sudah terdaftar',
+    'auth/weak-password': 'Password terlalu lemah (min. 6 karakter)',
+    'auth/network-request-failed': 'Tidak ada koneksi internet',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+      'API Key tidak valid. Cek firebaseConfig di kode.',
+    'auth/api-key-not-valid': 'API Key tidak valid. Cek firebaseConfig.'
+  };
+  return map[code] || 'Error: ' + code;
+}
+
+function setStatus(msg, cls) {
+  const el = $('loginStatus');
+  el.textContent = msg;
+  el.className = 'status ' + (cls || '');
+}
+
+/* ===== AUTH STATE ===== */
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUser = user;
+    $('userEmail').textContent = user.email;
+    $('loginBox').classList.add('hidden');
+    $('appBox').classList.remove('hidden');
+    listenData();
+  } else {
+    currentUser = null;
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    $('loginBox').classList.remove('hidden');
+    $('appBox').classList.add('hidden');
+    setStatus('', '');
+  }
+});
+
+/* ===== FIRESTORE REALTIME ===== */
+function listenData() {
+  const ref = doc(db, 'tabungan', currentUser.uid);
+
+  unsubscribe = onSnapshot(ref, snap => {
+    if (snap.exists()) {
+      data = snap.data();
+    } else {
+      data = { saldo: 0, riwayat: [] };
+      setDoc(ref, data);
+    }
+    render();
+    $('syncStatus').textContent = '✅ Tersinkron — ' + new Date().toLocaleTimeString('id-ID');
+    $('syncStatus').className = 'status online';
+  }, err => {
+    console.error(err);
+    $('syncStatus').textContent = '⚠️ Gagal sinkron: ' + err.message;
+    $('syncStatus').className = 'status offline';
+  });
+}
+
+async function simpan() {
+  if (!currentUser) return;
+  const ref = doc(db, 'tabungan', currentUser.uid);
+  try {
+    await setDoc(ref, data);
+  } catch (e) {
+    $('syncStatus').textContent = '⚠️ Gagal simpan: ' + e.message;
+    $('syncStatus').className = 'status offline';
+  }
+}
+
+/* ===== RENDER ===== */
+function render() {
+  $('saldo').textContent = rp(data.saldo);
+
+  const list = $('riwayat');
+  if (!data.riwayat || data.riwayat.length === 0) {
+    list.innerHTML = '<div class="kosong">Belum ada transaksi</div>';
+    return;
+  }
+  list.innerHTML = data.riwayat.map(r => `
+    <div class="item">
+      <div class="kiri">
+        <b>${r.tipe === 'masuk' ? 'Nabung' : 'Ambil'}</b>
+        <small>${r.tanggal}</small>
+      </div>
+      <span class="${r.tipe === 'masuk' ? 'masuk' : 'keluar'}">
+        ${r.tipe === 'masuk' ? '+' : '-'} ${rp(r.jumlah)}
+      </span>
+    </div>
+  `).join('');
+}
+
+/* ===== AKSI ===== */
+window.tambah = async function() {
+  const input = $('input');
+  const jumlah = Number(input.value);
+  if (!jumlah || jumlah <= 0) return alert('Masukkan nominal yang benar!');
+
+  data.saldo += jumlah;
+  data.riwayat = data.riwayat || [];
+  data.riwayat.unshift({
+    tipe: 'masuk', jumlah,
+    tanggal: new Date().toLocaleString('id-ID', { dateStyle:'short', timeStyle:'short' })
+  });
+  input.value = '';
+  render();
+  await simpan();
+};
+
+window.kurang = async function() {
+  const input = $('input');
+  const jumlah = Number(input.value);
+  if (!jumlah || jumlah <= 0) return alert('Masukkan nominal yang benar!');
+  if (jumlah > data.saldo) return alert('Saldo tidak cukup!');
+
+  data.saldo -= jumlah;
+  data.riwayat = data.riwayat || [];
+  data.riwayat.unshift({
+    tipe: 'keluar', jumlah,
+    tanggal: new Date().toLocaleString('id-ID', { dateStyle:'short', timeStyle:'short' })
+  });
+  input.value = '';
+  render();
+  await simpan();
+};
+
+window.reset = async function() {
+  if (!confirm('Yakin hapus semua data tabungan?')) return;
+  data = { saldo: 0, riwayat: [] };
+  render();
+  await simpan();
+};
+</script>
+
+</body>
+  </html>
